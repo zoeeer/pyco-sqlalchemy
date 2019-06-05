@@ -121,7 +121,7 @@ class BaseModel():
         return cls.query.filter_by(**cond).one_or_none()
 
     @classmethod
-    def get_or_update(cls, condition: dict, **updated_kws):
+    def upsert_one(cls, condition: dict, **updated_kws):
         m = cls.get_or_none(condition)
         if isinstance(m, cls):
             m.update(updated_kws)
