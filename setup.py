@@ -2,17 +2,22 @@ from __future__ import absolute_import, division, print_function
 from setuptools import setup
 import pyco_sqlalchemy
 
-with open("README.md", "r") as fh:
-    readme = fh.read()
+description = "Easy ORM for Flask and Django Based on SqlAlchemy.ORM"
+
+try:
+    with open("README.md", "r") as fh:
+        readme = fh.read()
+except:
+    readme = description
 
 setup(
     name="pyco_sqlalchemy",
     url="https://github.com/dodoru/pyco-sqlalchemy",
     license="MIT",
-    version='1.0',
+    version='1.0.0',
     author="dodoru",
     author_email="dodoru@foxmail.com",
-    description=("Easy ORM for Flask and Django Based on SqlAlchemy.ORM"),
+    description=(description),
     long_description=readme,
     long_description_content_type="text/markdown",
     zip_safe=False,

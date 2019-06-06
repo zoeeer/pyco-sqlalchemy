@@ -11,6 +11,3 @@ Tips:
 UTF8 = "utf8_general_ci"
 UTF8MB4 = "utf8mb4_general_ci"
 _UTF8MB4 = "utf8mb4_unicode_ci"
-
-from . import _types as types
-from . import _flask as flask
