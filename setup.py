@@ -14,7 +14,7 @@ setup(
     name="pyco_sqlalchemy",
     url="https://github.com/dodoru/pyco-sqlalchemy",
     license="MIT",
-    version='1.0.0',
+    version='1.0.1',
     author="dodoru",
     author_email="dodoru@foxmail.com",
     description=(description),
