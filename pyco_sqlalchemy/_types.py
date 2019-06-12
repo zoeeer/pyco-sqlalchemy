@@ -54,6 +54,15 @@ class TrimString(types.TypeDecorator):
         return value
 
 
+class StringTags(types.TypeDecorator):
+    impl = types.String
+
+    def process_bind_param(self, value, dialect):
+        if value and isinstance(value, str):
+            return ','.join(map(lambda x: x.strip(), value.split(',')))
+        return ""
+
+
 class OrderedJson(types.TypeDecorator):
     impl = types.JSON
 
