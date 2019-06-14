@@ -102,18 +102,49 @@ class BaseModel():
         return m
 
     @classmethod
-    def count(cls, condition=None, **condition_kws):
-        # https://docs.sqlalchemy.org/en/latest/orm/query.html#sqlalchemy.orm.query.Query.count
-        cond = cls.strict_form(condition, **condition_kws)
-        pk = cls.primary_keys()[0]
-        qry = cls.query.filter_by(**cond).value(func.count(getattr(cls, pk)))
+    def _make_query(cls, condition=None, limit=None, offset=None, order_by=None, **condition_kws):
+        # Can't call Query.update() or Query.delete() when limit()/offset()/distinct()/group_by()/order_by() has been called
+        condition = cls.strict_form(condition, **condition_kws)
+        qry = cls.query.filter_by(**condition)
+        if order_by is not None:
+            if isinstance(order_by, (list, tuple)):
+                qry = qry.order_by(*order_by)
+            else:
+                qry = qry.order_by(order_by)
+        if isinstance(limit, int):
+            qry = qry.limit(limit)
+        if isinstance(offset, int):
+            qry = qry.offset(offset)
         return qry
 
     @classmethod
+    def discard(cls, condition=None, limit=1, **condition_kws):
+        # In Case of incorrect operation, default limit 1;
+        condition = cls.strict_form(condition, **condition_kws)
+        n = cls.query.filter_by(**condition).delete()
+        if limit and limit < n:
+            db.session.rollback()
+            db.session.close()
+            msg = "You're trying discard {} rows of {}, which is over limit={}".format(n, cls.__name__, limit)
+            raise errors.SecurityError(msg)
+        else:
+            db.session.commit()
+            db.session.close()
+            return n
+
+    @classmethod
     def filter_by(cls, condition=None, **condition_kws):
-        cond = cls.strict_form(condition, **condition_kws)
-        ms = cls.query.filter_by(**cond).all()
+        qry = cls._make_query(condition, **condition_kws)
+        ms = qry.all()
         return ms
+
+    @classmethod
+    def count(cls, condition=None, **condition_kws):
+        # https://docs.sqlalchemy.org/en/latest/orm/query.html#sqlalchemy.orm.query.Query.count
+        qry = cls._make_query(condition, **condition_kws)
+        pk = cls.primary_keys()[0]
+        qry = qry.value(func.count(getattr(cls, pk)))
+        return qry
 
     @classmethod
     def get_or_none(cls, condition=None, **condition_kws):
