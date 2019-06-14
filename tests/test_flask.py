@@ -33,10 +33,25 @@ class User(db.Model, BaseModel):
     email = db.Column(db.String(64), unique=True)
 
 
-def test_insert(app):
+def test_user(app):
     form = dict(name="dev")
     u1 = User.insert(form, email="dev@pypi.com")
     u2 = User.upsert_one(form, email="dev@oncode.cc")
     assert u1.id == u2.id
     print(u1.to_dict())
     print(u2.to_dict())
+
+    u3 = User.insert(name='dev3')
+    assert u3.name == "dev3"
+    n = User.discard(name="dev3")
+    assert n == 1
+
+    u4 = User.insert(name="dev4")
+    try:
+        n = User.discard()
+    except Exception as e:
+        assert e.__class__.__name__ == "SecurityError"
+        print(e)
+    n = User.discard(limit=None)
+    us = User.filter_by()
+    assert len(us) == 0
