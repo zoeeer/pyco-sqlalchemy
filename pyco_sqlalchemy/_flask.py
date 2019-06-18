@@ -7,6 +7,7 @@ from sqlalchemy.ext.declarative import declared_attr
 from sqlalchemy.orm.attributes import InstrumentedAttribute, flag_modified
 from flask_sqlalchemy import SQLAlchemy
 import werkzeug.exceptions as errors
+from dateutil.parser import parse as parse_date
 import flask
 
 session_options = dict(
@@ -216,3 +217,20 @@ class CoModel(BaseModel):
     @declared_attr
     def updated_time(self):
         return db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+
+    @classmethod
+    def initial(cls, data=None, **kwargs):
+        form = cls.strict_form(data, **kwargs)
+        created_time = form.pop('created_time', None)
+        if isinstance(created_time, datetime):
+            form['created_time'] = created_time
+        elif isinstance(created_time, str):
+            form['created_time'] = parse_date(created_time)
+
+        updated_time = form.pop('updated_time', None)
+        if isinstance(updated_time, datetime):
+            form['updated_time'] = updated_time
+        elif isinstance(updated_time, str):
+            form['updated_time'] = parse_date(updated_time)
+        m = cls(**form)
+        return m
