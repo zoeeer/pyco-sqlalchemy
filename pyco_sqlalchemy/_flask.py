@@ -4,7 +4,7 @@ import logging
 
 from sqlalchemy import func
 from sqlalchemy.ext.declarative import declared_attr
-from sqlalchemy.orm.attributes import InstrumentedAttribute
+from sqlalchemy.orm.attributes import InstrumentedAttribute, flag_modified
 from flask_sqlalchemy import SQLAlchemy
 import werkzeug.exceptions as errors
 import flask
@@ -185,11 +185,17 @@ class BaseModel():
     def update(self, form=None, __force=False, **kwargs):
         data = self.strict_form(form, **kwargs)
         keys = self._immutable_keys()
+        is_modified = False
         for k, v in data.items():
             is_mutable = k not in keys
             if __force or is_mutable:
+                is_modified = True
                 setattr(self, k, v)
-        db.session.commit()
+                if isinstance(v, (dict, list, tuple)):
+                    flag_modified(self, k)
+        if is_modified:
+            db.session.commit()
+            db.session.close()
 
     def save(self):
         db.session.add(self)
