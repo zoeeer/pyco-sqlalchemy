@@ -10,13 +10,7 @@ import werkzeug.exceptions as errors
 from dateutil.parser import parse as parse_date
 import flask
 
-session_options = dict(
-    bind=None,
-    autoflush=False,
-    autocommit=False,
-    expire_on_commit=False,
-)
-db = SQLAlchemy(session_options=session_options)
+db = SQLAlchemy()
 
 if flask.has_app_context():
     logger = flask.current_app.logger
@@ -39,7 +33,6 @@ def force_remove_multiple(*models, silent=False):
                 raise errors.NotFound(msg)
     if count > 0:
         db.session.commit()
-        db.session.close()
 
 
 class BaseModel():
@@ -125,12 +118,10 @@ class BaseModel():
         n = cls.query.filter_by(**condition).delete()
         if limit and limit < n:
             db.session.rollback()
-            db.session.close()
             msg = "You're trying discard {} rows of {}, which is over limit={}".format(n, cls.__name__, limit)
             raise errors.SecurityError(msg)
         else:
             db.session.commit()
-            db.session.close()
             return n
 
     @classmethod
@@ -196,17 +187,14 @@ class BaseModel():
                     flag_modified(self, k)
         if is_modified:
             db.session.commit()
-            db.session.close()
 
     def save(self):
         db.session.add(self)
         db.session.commit()
-        db.session.close()
 
     def remove(self):
         db.session.delete(self)
         db.session.commit()
-        db.session.close()
 
 
 class CoModel(BaseModel):
