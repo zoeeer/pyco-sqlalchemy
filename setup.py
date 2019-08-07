@@ -1,6 +1,5 @@
 from __future__ import absolute_import, division, print_function
 from setuptools import setup
-import pyco_sqlalchemy
 
 description = "Easy ORM for Flask and Django Based on SqlAlchemy.ORM"
 
@@ -14,7 +13,7 @@ setup(
     name="pyco_sqlalchemy",
     url="https://github.com/dodoru/pyco-sqlalchemy",
     license="MIT",
-    version='1.0.2',
+    version='1.0.4',
     author="dodoru",
     author_email="dodoru@foxmail.com",
     description=(description),
