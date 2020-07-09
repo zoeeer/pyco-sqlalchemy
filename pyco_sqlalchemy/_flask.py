@@ -142,6 +142,20 @@ class BaseModel():
             return n
 
     @classmethod
+    def page_items(cls, condition=None, limit=10, offset=0, order_by=None, **condition_kws):
+        qry = cls._make_query(condition, **condition_kws)
+        pk = cls.primary_keys()[0]
+        total = qry.value(func.count(getattr(cls, pk)))
+        if isinstance(order_by, (list, tuple)):
+            qry = qry.order_by(*order_by)
+        elif order_by:
+            qry = qry.order_by(order_by)
+        items = qry.limit(limit).offset(offset).all()
+        next_offset = offset + len(items)
+        has_more = total > next_offset
+        return dict(total=total, next_offset=next_offset, has_more=has_more, items=items)
+
+    @classmethod
     def filter_by(cls, condition=None, **condition_kws):
         qry = cls._make_query(condition, **condition_kws)
         ms = qry.all()
