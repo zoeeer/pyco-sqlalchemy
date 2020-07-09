@@ -229,6 +229,7 @@ class BaseModel():
 
 
 class CoModel(BaseModel):
+
     @declared_attr
     def created_time(self):
         return db.Column(db.DateTime, default=datetime.utcnow)
@@ -253,3 +254,16 @@ class CoModel(BaseModel):
             form['updated_time'] = parse_date(updated_time)
         m = cls(**form)
         return m
+
+    @classmethod
+    def lastOrNone(cls, **kwargs):
+        qry = cls._make_query(kwargs, limit=1, order_by=cls.created_time.desc())
+        return qry.one_or_none()
+
+    @classmethod
+    def lastOr404(cls, **kwargs):
+        m = cls.lastOrNone(**kwargs)
+        if isinstance(m, cls):
+            return m
+        msg = "Data Not Found: {}: {}".format(cls.__name__, pformat(kwargs))
+        raise errors.NotFound(msg)
