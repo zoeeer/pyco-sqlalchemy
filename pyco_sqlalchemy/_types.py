@@ -3,6 +3,7 @@ from datetime import datetime
 from collections import OrderedDict
 from dateutil.parser import parse as parse_date
 from sqlalchemy import types
+import os
 
 
 class DateTime(types.TypeDecorator):
@@ -68,7 +69,19 @@ class OrderedJson(types.TypeDecorator):
 
     def process_result_value(self, value, dialect):
         if isinstance(value, str):
-            value = json.JSONDecoder(object_pairs_hook=OrderedDict).decode(str)
-        elif isinstance(value, dict) and not isinstance(value, OrderedDict):
-            value = OrderedDict(sorted(value.items))
+            return json.JSONDecoder(object_pairs_hook=OrderedDict).decode(value)
         return value
+
+
+class JsonText(types.TypeDecorator):
+    # NOTE: actually it supports `sqltypes.JSON`
+    # https://docs.sqlalchemy.org/en/13/core/custom_types.html#sqlalchemy.types.TypeDecorator
+    impl = types.Text
+    JSONDecoder = json.JSONDecoder
+    JSONEncoder = json.JSONEncoder
+
+    def process_bind_param(self, value, dialect):
+        return json.dumps(value, indent=2, cls=self.JSONEncoder)
+
+    def process_result_value(self, value, dialect):
+        return json.loads(value, cls=self.JSONDecoder)
