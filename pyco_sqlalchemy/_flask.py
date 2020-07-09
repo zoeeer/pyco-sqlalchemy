@@ -1,6 +1,7 @@
-from datetime import datetime
-from pprint import pformat
 import logging
+from pprint import pformat
+from datetime import datetime
+from contextlib import contextmanager
 
 from sqlalchemy import func
 from sqlalchemy.ext.declarative import declared_attr
@@ -16,6 +17,21 @@ if flask.has_app_context():
     logger = flask.current_app.logger
 else:
     logger = logging.getLogger("flask.app")
+
+
+@contextmanager
+def db_session_maker(auto_commit=False):
+    ## 不要尝试重新手动创建 session, eg: `db.create_scoped_session(options=options)`
+    ## 避免ORM对象在不同session中重复Attach
+    sess = db.session
+    yield sess
+    if auto_commit:
+        try:
+            sess.commit()
+        except Exception as e:
+            sess.rollback()
+            raise e
+    sess.close()
 
 
 def force_remove_multiple(*models, silent=False):
