@@ -116,14 +116,13 @@ class BaseModel():
         # Can't call Query.update() or Query.delete() when limit()/offset()/distinct()/group_by()/order_by() has been called
         condition = cls.strict_form(condition, **condition_kws)
         qry = cls.query.filter_by(**condition)
-        if order_by is not None:
-            if isinstance(order_by, (list, tuple)):
-                qry = qry.order_by(*order_by)
-            else:
-                qry = qry.order_by(order_by)
+        if isinstance(order_by, (list, tuple)):
+            qry = qry.order_by(*order_by)
+        elif order_by:
+            qry = qry.order_by(order_by)
         if isinstance(limit, int):
             qry = qry.limit(limit)
-        if isinstance(offset, int):
+        if isinstance(offset, int) and offset >= 0:
             qry = qry.offset(offset)
         return qry
 
