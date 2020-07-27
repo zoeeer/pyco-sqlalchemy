@@ -35,15 +35,33 @@ class DateTime(types.TypeDecorator):
             return value.strftime("%Y-%m-%d %H:%M:%S.%f")
 
 
-class FixedBool(types.TypeDecorator):
+class BoolField(types.TypeDecorator):
     impl = types.Boolean
+    # NOTE: origin `sqltypes.Boolean` use _strict_bools = frozenset([None, True, False])
+
+    BoolStrings = {
+        ""     : False,
+        "0"    : False,
+        "false": False,
+        "null" : False,
+        "none" : False,
+        "no"   : False,
+        "n"    : False,
+        "f"    : False,
+        # "1"    : True,
+        # "true" : True,
+        # "yes"  : True,
+        # "ok"   : True,
+        # "y"    : True,
+        # "t"    : True,
+    }
 
     def process_bind_param(self, value, dialect):
-        if value in ["0", 0, "false", "False"]:
-            value = False
-        elif value in ["1", 1, "true", "True"]:
-            value = True
-        return value
+        if isinstance(value, str):
+            v = value.strip().lower()
+            return self.BoolStrings.get(v, True)
+        else:
+            return bool(value)
 
 
 class TrimString(types.TypeDecorator):
