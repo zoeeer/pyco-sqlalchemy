@@ -118,10 +118,9 @@ class BaseModel():
         qry = cls.query.filter_by(**condition)
         if isinstance(order_by, (list, tuple)):
             qry = qry.order_by(*order_by)
-        elif order_by:
-            # https://github.com/sqlalchemy/sqlalchemy/issues/4269
-            # qry = qry.order_by(order_by) ERROR since SQLAlchemy>1.3.6
-            qry = qry.order_by([order_by])
+        elif order_by is not None:
+            # NOTE: Raise Error if bool(order_by)
+            qry = qry.order_by(order_by)
         if isinstance(limit, int):
             qry = qry.limit(limit)
         if isinstance(offset, int) and offset >= 0:
