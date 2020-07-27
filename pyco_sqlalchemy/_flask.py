@@ -149,7 +149,7 @@ class BaseModel():
         total = qry.value(func.count(getattr(cls, pk)))
         if isinstance(order_by, (list, tuple)):
             qry = qry.order_by(*order_by)
-        elif order_by:
+        elif order_by is not None:
             qry = qry.order_by(order_by)
         items = qry.limit(limit).offset(offset).all()
         next_offset = offset + len(items)
