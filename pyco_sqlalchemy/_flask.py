@@ -131,7 +131,7 @@ class BaseModel():
     def discard(cls, condition=None, limit=1, **condition_kws):
         # In Case of incorrect operation, default limit 1;
         condition = cls.strict_form(condition, **condition_kws)
-        with db_session_maker as db_sess:
+        with db_session_maker(auto_commit=False) as db_sess:
             # n = cls.query.filter_by(**condition).delete()
             n = db_sess.query(cls).filter_by(**condition).delete()
             if limit and limit < n:
@@ -139,7 +139,7 @@ class BaseModel():
                 msg = "You're trying discard {} rows of {}, which is over limit={}".format(n, cls.__name__, limit)
                 raise errors.SecurityError(msg)
             else:
-                db.session.commit()
+                db_sess.commit()
             return n
 
     @classmethod
