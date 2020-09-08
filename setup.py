@@ -1,7 +1,7 @@
 from __future__ import absolute_import, division, print_function
 from setuptools import setup
 
-description = "Easy ORM for Flask Based on SqlAlchemy.ORM"
+description = "Simple ORM BaseModel for Flask depends on SqlAlchemy"
 
 try:
     with open("README.md", "r") as fh:
@@ -13,7 +13,7 @@ setup(
     name="pyco_sqlalchemy",
     url="https://github.com/dodoru/pyco-sqlalchemy",
     license="MIT",
-    version='1.1.0',
+    version='1.1.2',
     author="Nico Ning",
     author_email="dodoru@foxmail.com",
     description=(description),
