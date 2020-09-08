@@ -68,8 +68,14 @@ class TrimString(types.TypeDecorator):
     impl = types.String
 
     def process_bind_param(self, value, dialect):
-        if value and isinstance(value, str):
+        if isinstance(value, str):
             value = value.strip()
+        elif value is None:
+            return ""
+        else:
+            value = str(value)
+        if self.impl.length > 0 and len(value) > self.impl.length:
+            value = value[-self.impl.length:]
         return value
 
 
@@ -79,7 +85,23 @@ class StringTags(types.TypeDecorator):
     def process_bind_param(self, value, dialect):
         if value and isinstance(value, str):
             return ','.join(map(lambda x: x.strip(), value.split(',')))
+        if isinstance(value, (list, tuple, set)):
+            return ','.join(map(str, value))
         return ""
+
+
+class SortedTags(types.TypeDecorator):
+    impl = types.JSON
+
+    def process_bind_param(self, value, dialect):
+        if isinstance(value, (list, tuple, set)):
+            return sorted(set(map(str, value)))
+        elif isinstance(value, str):
+            return sorted(set(map(lambda x: x.strip(), value.split(','))))
+        elif not value:
+            return []
+        else:
+            return [str(value)]
 
 
 class OrderedJson(types.TypeDecorator):
