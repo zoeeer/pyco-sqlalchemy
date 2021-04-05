@@ -19,17 +19,18 @@ def now(tz=None):
 
 
 def parse_date(val, nullable=True, tz=TZ_LOCAL, **parse_kws):
-    if isinstance(val, (int, float)):
-        return datetime.fromtimestamp(val, tz=tz)
+    v = None
+    if isinstance(val, datetime):
+        v = val.timestamp()
     elif isinstance(val, str):
-        return parse_datestr(val, **parse_kws)
-    elif isinstance(val, datetime):
-        # 注意: 如果 val 是使用 datetime.utcnow() 获取的日期, 如果 tz 不为 TZ_UTC, 其时间戳会被更改
-        # 假设当地北京, 使用 tz=TZ_LOCAL, 则返回日期的时间戳会减少 8 小时 (28800s)
-        return val.replace(tzinfo=tz)
-    elif val is None:
-        if nullable:
-            return None
+        v = parse_datestr(val, **parse_kws).timestamp()
+    elif isinstance(val, (int, float)):
+        v = val
+
+    if v:
+        return datetime.fromtimestamp(v, tz=tz)
+    elif nullable:
+        return None
     raise ValueError(f"Unknown DateValue{val}")
 
 
