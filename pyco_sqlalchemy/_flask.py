@@ -2,13 +2,12 @@ import logging
 from pprint import pformat
 from datetime import datetime
 from contextlib import contextmanager
-
 from sqlalchemy import func
 from sqlalchemy.ext.declarative import declared_attr
 from sqlalchemy.orm.attributes import InstrumentedAttribute, flag_modified
 from flask_sqlalchemy import SQLAlchemy
 import werkzeug.exceptions as errors
-from dateutil.parser import parse as parse_date
+from . import utils
 import flask
 
 db = SQLAlchemy()
@@ -20,7 +19,7 @@ else:
 
 
 @contextmanager
-def db_session_maker(auto_commit=False):
+def db_session_maker(auto_commit=False, auto_close=False):
     ## 不要尝试重新手动创建 session, eg: `db.create_scoped_session(options=options)`
     ## 避免ORM对象在不同session中重复Attach
     sess = db.session
@@ -31,7 +30,9 @@ def db_session_maker(auto_commit=False):
         except Exception as e:
             sess.rollback()
             raise e
-    sess.close()
+
+    if auto_close:
+        sess.close()
 
 
 def force_remove_multiple(*models, silent=False):
@@ -86,7 +87,10 @@ class BaseModel():
         if data is None:
             data = kwargs
         elif isinstance(data, dict):
-            data.update(**kwargs)
+            if kwargs:
+                data2 = dict(**data)
+                data2.update(kwargs)
+                data = data2
         else:
             raise TypeError('data value must be dict or None')
 
@@ -233,11 +237,11 @@ class CoModel(BaseModel):
 
     @declared_attr
     def created_time(self):
-        return db.Column(db.DateTime, default=datetime.utcnow)
+        return db.Column(db.DateTime, default=utils.now())
 
     @declared_attr
     def updated_time(self):
-        return db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+        return db.Column(db.DateTime, default=utils.now(), onupdate=utils.now())
 
     @classmethod
     def initial(cls, data=None, **kwargs):
@@ -246,19 +250,20 @@ class CoModel(BaseModel):
         if isinstance(created_time, datetime):
             form['created_time'] = created_time
         elif isinstance(created_time, str):
-            form['created_time'] = parse_date(created_time)
+            form['created_time'] = utils.parse_date(created_time)
 
         updated_time = form.pop('updated_time', None)
         if isinstance(updated_time, datetime):
             form['updated_time'] = updated_time
         elif isinstance(updated_time, str):
-            form['updated_time'] = parse_date(updated_time)
+            form['updated_time'] = utils.parse_date(updated_time)
         m = cls(**form)
         return m
 
     @classmethod
     def lastOrNone(cls, **kwargs):
-        qry = cls._make_query(kwargs, limit=1, order_by=cls.created_time.desc())
+        order_by = kwargs.pop("order_by", cls.created_time.desc())
+        qry = cls._make_query(kwargs, limit=1, order_by=order_by)
         return qry.one_or_none()
 
     @classmethod
