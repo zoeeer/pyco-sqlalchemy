@@ -1,9 +1,8 @@
 import json
 from datetime import datetime
 from collections import OrderedDict
-from dateutil.parser import parse as parse_date
 from sqlalchemy import types
-import os
+from . import utils
 
 
 class DateTime(types.TypeDecorator):
@@ -22,17 +21,34 @@ class DateTime(types.TypeDecorator):
         if isinstance(value, datetime):
             return value
         elif isinstance(value, str):
-            return parse_date(value)
+            return utils.parse_datestr(value)
         elif isinstance(value, (int, float)):
             return datetime.fromtimestamp(value)
         else:
             return value
 
-    def process_result_value(self, value, dialect):
-        if value is None:
-            return None
-        elif isinstance(value, datetime):
-            return value.strftime("%Y-%m-%d %H:%M:%S.%f")
+
+class DateTimeTZLocal(types.TypeDecorator):
+    """
+    # sample 1:
+    @declared_attr
+    def created_time(self):
+        return db.Column(DateTime, default=utils.now)
+
+    # sample 2:
+    updated_time = db.Column(DateTime, default=utils.now, onupdate=utils.now)
+    """
+    impl = types.DateTime
+
+    def process_bind_param(self, value, dialect):
+        return utils.parse_date(value, tz=utils.TZ_LOCAL)
+
+
+class DatetimeTZUtc(types.TypeDecorator):
+    impl = types.DateTime
+
+    def process_bind_param(self, value, dialect):
+        return utils.parse_date(value, tz=utils.TZ_UTC)
 
 
 class BoolField(types.TypeDecorator):
@@ -77,6 +93,18 @@ class TrimString(types.TypeDecorator):
         if self.impl.length > 0 and len(value) > self.impl.length:
             value = value[-self.impl.length:]
         return value
+
+
+class SnakeField(types.TypeDecorator):
+    impl = types.String
+
+    def process_bind_param(self, value, dialect):
+        if value is None:
+            return ""
+        elif isinstance(value, (str, int)):
+            return regex.snake_case(str(value))
+        else:
+            raise ApiError(f"invalid ${type(value)}:'{value}', Column<SnakeField> require [0-9a-zA-Z_]")
 
 
 class StringTags(types.TypeDecorator):
