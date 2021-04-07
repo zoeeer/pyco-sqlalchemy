@@ -23,9 +23,11 @@ class DateTime(types.TypeDecorator):
     @declared_attr
     def created_time(self):
         return db.Column(DateTime, default=datetime.utcnow)
+    ## note: DateTime 不校验时区, 使用`datetime.utcnow`容易得到错误的时间戳, 需要在后端业务代码重新处理 tz_offset
 
     # sample 2:
-    updated_time = db.Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+    updated_time = db.Column(DateTime, default=datetime.now, onupdate=datetime.now)
+    ## 如果有国际化需求, 建议使用时间戳替代日期, 或者统一使用 `DatetimeTZUtc`
     """
     impl = types.DateTime
 
