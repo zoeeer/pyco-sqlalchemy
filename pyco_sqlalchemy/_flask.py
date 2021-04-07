@@ -1,3 +1,8 @@
+"""
+require:
+    Flask-SQLAlchemy>=2.4.0
+"""
+
 import logging
 from pprint import pformat
 from datetime import datetime
