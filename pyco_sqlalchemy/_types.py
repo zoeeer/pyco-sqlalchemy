@@ -2,7 +2,19 @@ import json
 from datetime import datetime
 from collections import OrderedDict
 from sqlalchemy import types
+import sqlalchemy.exc as sqlerrors
 from . import utils
+from . import regex
+
+
+class CustomParameterError(Exception, sqlerrors.DontWrapMixin):
+
+    def __init__(self, msg, *args):
+        self.description = msg
+        self.args = args
+
+    def __str__(self):
+        return "{}: {} {}".format(self.__class__.__name__, self.description, self.args if self.args else "")
 
 
 class DateTime(types.TypeDecorator):
@@ -64,6 +76,23 @@ class BoolField(types.TypeDecorator):
         "no"   : False,
         "n"    : False,
         "f"    : False,
+
+        ### 支持部分英文单词语义化
+        "error"  : False,
+        "not_ok" : False,
+        "not ok" : False,
+        "invalid" : False,
+        "incorrect" : False,
+        "undefined" : False,
+
+        ### 支持部分中文语义化
+        "无"    : False,
+        "否"    : False,
+        "错"    : False,
+        "空"    : False,
+        "错误"    : False,
+        "无效"    : False,
+        "空白"    : False,
         # "1"    : True,
         # "true" : True,
         # "yes"  : True,
@@ -104,7 +133,7 @@ class SnakeField(types.TypeDecorator):
         elif isinstance(value, (str, int)):
             return regex.snake_case(str(value))
         else:
-            raise ApiError(f"invalid ${type(value)}:'{value}', Column<SnakeField> require [0-9a-zA-Z_]")
+            raise CustomParameterError(f"invalid ${type(value)}:'{value}', Column<SnakeField> require [0-9a-zA-Z_]")
 
 
 class StringTags(types.TypeDecorator):
@@ -130,6 +159,9 @@ class SortedTags(types.TypeDecorator):
             return []
         else:
             return [str(value)]
+
+
+SortedTagsArray = SortedTags
 
 
 class OrderedJson(types.TypeDecorator):
