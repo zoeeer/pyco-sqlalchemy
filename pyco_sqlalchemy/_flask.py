@@ -204,9 +204,7 @@ class BaseModel():
             raise errors.NotFound(msg)
 
     def to_dict(self, **kwargs):
-        d = dict(
-            _type=self.__class__.__name__
-        )
+        d = dict(_type=self.__class__.__name__)
         columns = self.columns()
         for col in columns:
             name = col.name
@@ -242,11 +240,11 @@ class CoModel(BaseModel):
 
     @declared_attr
     def created_time(self):
-        return db.Column(db.DateTime, default=utils.now())
+        return db.Column(db.DateTime, default=utils.now)
 
     @declared_attr
     def updated_time(self):
-        return db.Column(db.DateTime, default=utils.now(), onupdate=utils.now())
+        return db.Column(db.DateTime, default=utils.now, onupdate=utils.now)
 
     @classmethod
     def initial(cls, data=None, **kwargs):
