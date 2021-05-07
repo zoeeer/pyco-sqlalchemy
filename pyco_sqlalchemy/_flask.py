@@ -160,7 +160,10 @@ class BaseModel():
             qry = qry.order_by(*order_by)
         elif order_by is not None:
             qry = qry.order_by(order_by)
-        items = qry.limit(limit).offset(offset).all()
+        if limit > 0:
+            items = qry.limit(limit).offset(offset).all()
+        else:
+            items = qry.all()
         next_offset = offset + len(items)
         has_more = total > next_offset
         return dict(total=total, next_offset=next_offset, has_more=has_more, items=items)
