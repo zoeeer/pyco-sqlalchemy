@@ -162,11 +162,13 @@ class BaseModel():
             qry = qry.order_by(order_by)
         if limit > 0:
             items = qry.limit(limit).offset(offset).all()
+        elif limit == 0:
+            items = []
         else:
             items = qry.all()
         next_offset = offset + len(items)
         has_more = total > next_offset
-        return dict(total=total, next_offset=next_offset, has_more=has_more, items=items)
+        return dict(total=total, limit=limit, next_offset=next_offset, has_more=has_more, items=items)
 
     @classmethod
     def filter_by(cls, condition=None, **condition_kws):
