@@ -128,10 +128,10 @@ class BaseModel():
         elif order_by is not None:
             # NOTE: Raise Error if bool(order_by)
             qry = qry.order_by(order_by)
-        if isinstance(limit, int) and limit > 0:
+        if isinstance(limit, int) and limit >= 0:
             qry = qry.limit(limit)
-        if isinstance(offset, int) and offset >= 0:
-            qry = qry.offset(offset)
+            if isinstance(offset, int) and offset >= 0:
+                qry = qry.offset(offset)
         return qry
 
     @classmethod
