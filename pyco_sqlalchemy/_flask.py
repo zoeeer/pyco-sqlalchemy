@@ -3,6 +3,7 @@ require:
     Flask-SQLAlchemy>=2.4.0
 """
 
+import os
 import logging
 from pprint import pformat
 from datetime import datetime
@@ -13,14 +14,11 @@ from sqlalchemy.orm.attributes import InstrumentedAttribute, flag_modified
 from flask_sqlalchemy import SQLAlchemy
 import werkzeug.exceptions as errors
 from . import utils
-import flask
 
 db = SQLAlchemy()
 
-if flask.has_app_context():
-    logger = flask.current_app.logger
-else:
-    logger = logging.getLogger("flask.app")
+logger_name = os.environ.get("FLASK_SQL_LOGGER", "flask.app")
+logger = logging.getLogger(logger_name)
 
 
 @contextmanager
@@ -33,6 +31,7 @@ def db_session_maker(auto_commit=False, auto_close=False):
         try:
             sess.commit()
         except Exception as e:
+            logger.exception(e)
             sess.rollback()
             raise e
 
@@ -70,7 +69,7 @@ class BaseModel():
             name = cls.__name__
             desc = 'Service Unavailable: DbModel<{}> '.format(name)
             msg = "API-ERROR:{}\nDbModel<{}> must be subclass of db.Model!".format(desc, name)
-            logger.error(msg)
+            logger.exception(msg)
             raise errors.ServiceUnavailable(desc)
         else:
             return tbl.columns
@@ -227,6 +226,11 @@ class BaseModel():
                 setattr(self, k, v)
                 if isinstance(v, (dict, list, tuple)):
                     flag_modified(self, k)
+            else:
+                v0 = getattr(self, k, None)
+                tp = self.__class__.__name__
+                msg = "Immutable Field {}.{}, ignore updating `{} => {}`".format(tp, k, v0, v)
+                logger.warning(msg)
         if is_modified:
             db.session.commit()
 
