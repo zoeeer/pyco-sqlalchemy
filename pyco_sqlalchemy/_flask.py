@@ -103,8 +103,6 @@ class BaseModel():
         for k, v in data.items():
             col = getattr(cls, k, None)
             if isinstance(col, InstrumentedAttribute):
-                if isinstance(v, str):
-                    v = v.strip()
                 form[k] = v
         return form
 
@@ -130,7 +128,7 @@ class BaseModel():
         elif order_by is not None:
             # NOTE: Raise Error if bool(order_by)
             qry = qry.order_by(order_by)
-        if isinstance(limit, int):
+        if isinstance(limit, int) and limit > 0:
             qry = qry.limit(limit)
         if isinstance(offset, int) and offset >= 0:
             qry = qry.offset(offset)
