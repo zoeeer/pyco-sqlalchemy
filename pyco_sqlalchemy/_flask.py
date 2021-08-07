@@ -118,10 +118,11 @@ class BaseModel():
         return m
 
     @classmethod
-    def _make_query(cls, condition=None, limit=None, offset=None, order_by=None, **condition_kws):
+    def _make_query(cls, condition=None, query=None, limit=None, offset=None, order_by=None, **condition_kws):
         # NOTE: ERROR raise if call query.[update({})/delete()] after limit()/offset()/distinct()/group_by()/order_by()
         condition = cls.strict_form(condition, **condition_kws)
-        qry = cls.query.filter_by(**condition)
+        qry = query or cls.query
+        qry = qry.filter_by(**condition)
         if isinstance(order_by, (list, tuple)):
             qry = qry.order_by(*order_by)
         elif order_by is not None:
